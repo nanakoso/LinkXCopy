@@ -1,0 +1,3 @@
+[[LinkXCopy]]
+xcopy with resolve windows shortcuts.
+ショートカットがあったらその指す先のファイルを取得するxcopy
