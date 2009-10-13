@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import jp.ne.so_net.ga2.no_ji.jcom.JComException;
 
 /**
@@ -67,22 +68,22 @@ public class LinkXCopy {
 
 		FileGenerator g = new FileGenerator(cpSrcRoot);
 
-		for (File cpSrc : g) {
-			File cpDst = Util.changePath(cpSrc, cpSrcRoot, cpDstRoot);
+		for (File cpSrcOrLnk : g) {
+			File cpDst = Util.changePath(cpSrcOrLnk, cpSrcRoot, cpDstRoot);
 			if (cpDst == null) {
 				continue;
 			}
-			if (Util.isLink(cpSrc)) {
-				System.out.println("<< " + cpSrc);
-				File lnkTarget = Util.traceLink(cpSrc, lnkParser);
+			if (Util.isLink(cpSrcOrLnk)) {
+				System.out.println("<< " + cpSrcOrLnk);
+				File lnkTarget = Util.traceLink(cpSrcOrLnk, lnkParser);
 				System.out.println(">> " + lnkTarget);
 				lnkTarget = tryChangeRoot(lnkRootMap, lnkTarget);
 				if (lnkTarget.isFile()) {
 					File cpDstChgExt = Util.copyExt(cpDst, lnkTarget);
-					fileCopy(lnkTarget, cpDstChgExt, delList);
+					fileCheckAndCopy(lnkTarget, cpDstChgExt, cpSrcOrLnk, delList);
 				}
 			} else {
-				fileCopy(cpSrc, cpDst, delList);
+				fileCheckAndCopy(cpSrcOrLnk, cpDst, null, delList);
 			}
 		}
 	}
@@ -95,8 +96,6 @@ public class LinkXCopy {
 	 */
 	private static void fileCopy(final File srcFile, final File dstFile,
 			final List<File> delList) throws IOException {
-		System.out.println("<- " + srcFile);
-		System.out.println("-> " + dstFile);
 		Util.maekParentDir(dstFile);
 		FileInputStream fis = new FileInputStream(srcFile);
 		FileOutputStream fos = new FileOutputStream(dstFile);
@@ -113,6 +112,57 @@ public class LinkXCopy {
 			fis.close();
 			fos.close();
 		}
+	}
+
+	/**
+	 * @param srcFile
+	 * @param dstFile
+	 * @param lnkFile
+	 * @param delList
+	 * @throws IOException
+	 */
+	private static void fileCheckAndCopy(final File srcFile, final File dstFile,
+			final File lnkFile, final List<File> delList) throws IOException {
+		System.out.println("<- " + srcFile);
+		System.out.println("-> " + dstFile);
+
+		if (fileCopyCheck(srcFile, dstFile, lnkFile)) {
+			fileCopy(srcFile, dstFile, delList);
+		} else {
+			System.out.println("xx SKIP");
+		}
+
+		if (delList != null) {
+			delList.remove(dstFile);
+		}
+
+	}
+
+	/**
+	 * @param srcFile
+	 * @param dstFile
+	 * @param lnkFile
+	 * @return
+	 */
+	private static boolean fileCopyCheck(final File srcFile,
+			final File dstFile, final File lnkFile) {
+		// コピー先が存在しなかったらコピー
+		if (!dstFile.exists()) {
+			return true;
+		}
+		// ソースのほうが新しかったらコピー
+		if (srcFile.lastModified() >= dstFile.lastModified()) {
+			return true;
+		}
+		// ファイルサイズが違ったらコピー
+		if (srcFile.length() != dstFile.length()) {
+			return true;
+		}
+		// ショートカットのほうが新しかったらコピー
+		if (lnkFile != null && lnkFile.lastModified() >= dstFile.lastModified()) {
+			return true;
+		}
+		return false;
 	}
 
 	private static List<File> listDeleteFiles(final File cpDstRoot) {
