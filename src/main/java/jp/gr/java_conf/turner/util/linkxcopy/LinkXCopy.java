@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -97,20 +98,13 @@ public class LinkXCopy {
 	private static void fileCopy(final File srcFile, final File dstFile,
 			final List<File> delList) throws IOException {
 		Util.maekParentDir(dstFile);
-		FileInputStream fis = new FileInputStream(srcFile);
-		FileOutputStream fos = new FileOutputStream(dstFile);
-		byte[] buf = new byte[1024];
+		FileChannel fic = new FileInputStream(srcFile).getChannel();
+		FileChannel foc = new FileOutputStream(dstFile).getChannel();
 		try {
-			int len;
-			while ((len = fis.read(buf)) >= 0) {
-				fos.write(buf, 0, len);
-			}
-			if (delList != null) {
-				delList.remove(dstFile);
-			}
+			fic.transferTo(0, fic.size(), foc);
 		} finally {
-			fis.close();
-			fos.close();
+			fic.close();
+			foc.close();
 		}
 	}
 
