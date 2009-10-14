@@ -2,10 +2,20 @@ package jp.gr.java_conf.turner.util.linkxcopy;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jp.ne.so_net.ga2.no_ji.jcom.JComException;
 
 public class Util {
+
+	private static final String NGCHAR_5C = "―ソЫ噂浬欺圭構蚕十申曾箪貼能表暴予禄兔喀媾彌拿杤歃濬畚秉綵臀藹觸軆鐔饅鷭偆砡";
+	private static final String NGCHAR_7C = "ポл榎掛弓芸鋼旨楯酢掃竹倒培怖翻慾處嘶斈忿掟桍毫烟痞窩縹艚蛞諫轎閖驂黥埈蒴";
+	private static final Pattern NG_PATTERN;
+	static {
+		NG_PATTERN = Pattern.compile("[" + NGCHAR_5C + NGCHAR_7C + "]");
+	}
 
 	/**
 	 * @param file
@@ -34,6 +44,48 @@ public class Util {
 			}
 		}
 		return ext;
+	}
+
+	/**
+	 * @param file
+	 * @return
+	 */
+	static File renameToAvoidDupName(final File file, final Set<File> fileSet) {
+		File wk = file;
+
+		if (fileSet.contains(wk)) {
+			String ext = getExt(wk);
+			File p = wk.getParentFile();
+			String name = getNameBody(file);
+			int i = 1;
+			do {
+				wk = setExt(new File(p, name + "(" + i + ")"), ext);
+				i++;
+			} while (fileSet.contains(wk));
+		}
+		return wk;
+	}
+
+	/**
+	 * @param file
+	 */
+	static File renameToAvoidBadChar(final File file) {
+		if (file == null) {
+			return null;
+		}
+
+		String name = file.getName();
+		Matcher macher = NG_PATTERN.matcher(name);
+		String rename = macher.replaceAll("◇");
+
+		if (name.equals(rename)) {
+			return file;
+		}
+
+		File ret = new File(file.getParent(), rename);
+		System.out.println("<B " + file);
+		System.out.println("B> " + ret);
+		return ret;
 	}
 
 	/**
@@ -147,7 +199,7 @@ public class Util {
 	/**
 	 * 空のディレクトリであれば削除する。
 	 *
-	 * 配下に空のディレクトリがある場合再帰的にすべて削除する。
+	 * 配下に空のディレクトリがある場合再帰的にすべて削除する。<br>
 	 * その結果空ディレクトリになった場合自身も削除する。
 	 *
 	 * @param dir

@@ -4,7 +4,7 @@
   <groupId>jp.gr.java_conf.turner.util.linkxcopy</groupId>
   <artifactId>LinkXCopy</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.8</version>
+  <version>0.0.9</version>
   <name>LinkXCopy</name>
   <url>http://maven.apache.org</url>
   <dependencies>
