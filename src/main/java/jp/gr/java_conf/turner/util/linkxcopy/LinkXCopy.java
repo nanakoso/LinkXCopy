@@ -264,8 +264,12 @@ public class LinkXCopy {
 
 	private static void execDelete(final List<File> delList) {
 		for (File f : delList) {
-			System.out.println("D> " + f);
-			f.delete();
+			if (!".nomedia".equals(f.getName())) {
+				System.out.println("D> " + f);
+				f.delete();
+			} else {
+				System.out.println("E> " + f);
+			}
 		}
 	}
 
